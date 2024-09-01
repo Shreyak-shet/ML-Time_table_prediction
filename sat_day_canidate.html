@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Elimination Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            padding: 20px;
+        }
+        .image-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .image-column img {
+            max-width: 220px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 10px 20px;
+            color: rebeccapurple;
+            border: none;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: green;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="image-column">
+            <img src="think.jpg" alt="think" />
+        </div>
+        <div class="container">
+            <h1>Candidate Elimination Algorithm</h1>
+            <table id="dataset">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>9.00-10.00</th>
+                        <th>10.00-10.50</th>
+                        <th>11.10-12.00</th>
+                        <th>12.00-1.00</th>
+                        <th>TIME TABLE FOLLOWED</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MONDAY</td>
+                        <td>EJ</td>
+                        <td>ML</td>
+                        <td>AI</td>
+                        <td>DEVOP</td>
+                        <td>YES</td>
+                    </tr>
+                    <tr>
+                        <td>TUESDAY</td>
+                        <td>AI</td>
+                        <td>EJ</td>
+                        <td>DAP</td>
+                        <td>SE&T</td>
+                        <td>NO</td>
+                    </tr>
+                    <tr>
+                        <td>WEDNESDAY</td>
+                        <td>EJ</td>
+                        <td>MA/DAP LAB</td>
+                        <td>MA/DAP LAB</td>
+                        <td>MA/DAP LAB</td>
+                        <td>YES</td>
+                    </tr>
+                    <tr>
+                        <td>THURSDAY</td>
+                        <td>EJ</td>
+                        <td>DAP</td>
+                        <td>AI</td>
+                        <td>SE&T</td>
+                        <td>NO</td>
+                    </tr>
+                    <tr>
+                        <td>FRIDAY</td>
+                        <td>DEVOP</td>
+                        <td>ML</td>
+                        <td>EJ</td>
+                        <td>SE&T</td>
+                        <td>YES</td>
+                    </tr>
+                    <tr>
+                        <td>SATURDAY</td>
+                        <td>
+                            <img src="thinking.jpg" alt="think" height="70px" />
+                        </td>
+                        <td><img src="thinking.jpg" alt="think" height="70px" /></td>
+                        <td><img src="thinking.jpg" alt="think" height="70px" /></td>
+                        <td><img src="thinking.jpg" alt="think" height="70px" /></td>
+                        <td><img src="thinking.jpg" alt="think" height="70px" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <p>SPECIFIC HYPOTHESIS: <span id="specific"></span></p>
+                <p>GENERAL HYPOTHESIS: <span id="general"></span></p>
+                <p>PREDICTED SATURDAY TIMETABLE: <span id="predicted"></span></p>
+            </div>
+            <button onclick="candidateElimination()">Run Candidate Elimination</button>
+        </div>
+    </div>
+
+    <script>
+    function candidateElimination() {
+        const dataset = [
+            ['EJ', 'ML', 'AI', 'DEVOP', 'YES'],
+            ['AI', 'EJ', 'DAP', 'SE&T', 'NO'],
+            ['EJ', 'MA/DAP LAB', 'MA/DAP LAB', 'MA/DAP LAB', 'YES'],
+            ['EJ', 'DAP', 'AI', 'SE&T', 'NO'],
+            ['DEVOP', 'ML', 'EJ', 'SE&T', 'YES']
+        ];
+
+        const numFeatures = dataset[0].length - 1;
+
+        // Initial specific hypothesis is the most specific: all 'Ø'
+        let specific = Array(numFeatures).fill('Ø');
+        // Initial general hypothesis is the most general: all '?'
+        let general = [Array(numFeatures).fill('?')];
+
+        console.log("Initial Specific Hypothesis:", specific);
+        console.log("Initial General Hypothesis:", general);
+
+        dataset.forEach((instance, idx) => {
+            const label = instance[numFeatures];
+            console.log(`Processing instance ${idx + 1}:`, instance);
+
+            if (label === 'YES') {
+                // Update specific hypothesis
+                for (let i = 0; i < numFeatures; i++) {
+                    if (specific[i] === 'Ø') {
+                        specific[i] = instance[i];
+                    } else if (specific[i] !== instance[i]) {
+                        specific[i] = '?';
+                    }
+                }
+                console.log("Updated specific hypothesis after positive instance:", specific);
+
+                // Remove general hypotheses that do not match the specific hypothesis
+                general = general.filter(g => {
+                    for (let i = 0; i < numFeatures; i++) {
+                        if (g[i] !== '?' && g[i] !== specific[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+                console.log("Filtered general hypotheses after positive instance:", general);
+            } else {
+                // Update general hypotheses for negative examples
+                let newGeneral = [];
+                general.forEach(g => {
+                    let consistent = true;
+                    for (let i = 0; i < numFeatures; i++) {
+                        if (g[i] !== '?' && g[i] !== instance[i]) {
+                            let newHypothesis = [...g];
+                            newHypothesis[i] = '?';
+                            newGeneral.push(newHypothesis);
+                            consistent = false;
+                        }
+                    }
+                    if (consistent) {
+                        newGeneral.push(g);
+                    }
+                });
+                general = newGeneral;
+                console.log("Updated general hypotheses after negative instance:", general);
+            }
+        });
+
+        // Remove general hypotheses that are more general than the specific hypothesis
+        general = general.filter(g => !g.every((val, idx) => val === '?' || val === specific[idx]));
+        console.log("Filtered general hypotheses:", general);
+
+        // Display hypotheses
+        document.getElementById('general').textContent = general.length ? general.map(h => h.join(', ')).join(' | ') : 'None';
+        document.getElementById('specific').textContent = specific.join(', ');
+
+        // Predict Saturday timetable
+        const predicted = specific.map(value => (value === '?' ? 'Any' : value));
+        document.getElementById('predicted').textContent = predicted.join(', ');
+
+        // Log final hypotheses and prediction
+        console.log("Final Specific Hypothesis:", specific);
+        console.log("Final General Hypothesis:", general);
+        console.log("Predicted Saturday Timetable:", predicted);
+    }
+    </script>
+</body>
+</html>
